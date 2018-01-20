@@ -30,9 +30,17 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add directory="../../SFML-2.4.2/include" />
 		</Compiler>
+		<Linker>
+			<Add library="sfml-graphics" />
+			<Add library="sfml-window" />
+			<Add library="sfml-system" />
+			<Add directory="../../SFML-2.4.2/lib" />
+		</Linker>
 		<Unit filename="chip8.cpp" />
 		<Unit filename="chip8.hpp" />
+		<Unit filename="font.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

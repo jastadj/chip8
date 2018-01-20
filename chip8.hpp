@@ -12,6 +12,8 @@
 #define DISPLAY_WIDTH 64
 #define DISPLAY_HEIGHT 32
 
+#define FONT_ADDR 0x1af
+
 class Chip8
 {
 private:
@@ -46,11 +48,7 @@ private:
     bool m_Display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
     // keyboard, keypad only has 0-9, a-f keys
-    uint16_t m_KeyState;
-
-
-    // display
-    void clearDisplay();
+    uint8_t m_KeyState;
 
     // instructions
     bool processInstruction(uint16_t inst);
@@ -59,5 +57,7 @@ public:
     Chip8();
     ~Chip8();
 
+    unsigned int getDisplayWidth() { return DISPLAY_WIDTH;}
+    unsigned int getDisplayHeight() { return DISPLAY_HEIGHT;}
 };
 #endif // CLASS_CHIP8

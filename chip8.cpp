@@ -1,6 +1,7 @@
 #include "chip8.hpp"
 #include <math.h>
 #include <time.h>
+#include <fstream>
 
 #include "font.hpp"
 
@@ -23,6 +24,12 @@ Chip8::Chip8()
 
     // init key state
     m_KeyState = 0x0;
+
+    // set first instruction to jump to address 0x200
+    m_Mem[0x0] = 0x12;
+    m_Mem[0x1] = 0x00;
+    m_Mem[0x200] = 0x10;
+    m_Mem[0x201] = 0x00;
 
     // store fonts (80 bytes = 16 characters * 5 bytes) in memory
     // store at mem 0x01af to allow for 80 bytes, stopping before 0x0200
@@ -50,6 +57,9 @@ bool Chip8::processInstruction(uint16_t inst)
 
     std::string iname = "ERR";
 
+    // original program counter
+    uint16_t op = m_PCounter;
+
     // first nibble is op code
     uint8_t opcode = (inst & 0xf000) >> 12;
     // the rest of the 12-bits can be a value or address
@@ -62,6 +72,9 @@ bool Chip8::processInstruction(uint16_t inst)
     uint8_t y = (inst & 0x00f0) >> 4;
     // last byte
     uint8_t kk = (inst & 0x00ff);
+
+    // advance program counter
+    if(m_PCounter == op) m_PCounter += 2;
 
     if(opcode == 0x0)
     {
@@ -389,7 +402,7 @@ bool Chip8::processInstruction(uint16_t inst)
 
 
 
-    if(false)
+    if(true)
     {
         std::cout << std::hex << "processing instruction:" << int(inst) << std::endl;
         std::cout << "opcode: " << int(opcode) << std::endl;
@@ -399,10 +412,39 @@ bool Chip8::processInstruction(uint16_t inst)
         std::cout << "y     : " << int(y) << std::endl;
         std::cout << "kk    : " << int(kk) << std::endl;
     }
-    std::cout << iname << std::endl;
+    std::cout << std::hex << m_PCounter << " : " << iname << std::endl;
+
 
 
 
     return true;
 }
 
+bool Chip8::executeNextInstruction()
+{
+    if(processInstruction( (m_Mem[m_PCounter] << 8) | (m_Mem[m_PCounter+1])     ) )
+    {
+        return true;
+    }
+
+    return false;
+}
+
+bool Chip8::loadRom(std::string filename, uint16_t addr)
+{
+    std::ifstream ifile;
+
+    ifile.open(filename.c_str(), std::ios::binary);
+
+    if(!ifile.is_open()) return false;
+
+    while(!ifile.eof())
+    {
+        unsigned char b;
+
+        b = ifile.get();
+
+        m_Mem[addr] = uint8_t(b);
+        addr++;
+    }
+}

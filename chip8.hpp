@@ -57,7 +57,29 @@ public:
     Chip8();
     ~Chip8();
 
+    typedef bool (*pointer_to_display)[DISPLAY_WIDTH];
+
+    // get display
     unsigned int getDisplayWidth() { return DISPLAY_WIDTH;}
     unsigned int getDisplayHeight() { return DISPLAY_HEIGHT;}
+    pointer_to_display getDisplay() { return m_Display;}
+
+    // get memory
+    uint16_t getProgramCounter() { return m_PCounter;}
+    uint8_t getMemAt(uint16_t addr) { return m_Mem[addr];}
+
+    // get registers
+    uint8_t *getRegisters() { return m_Reg;}
+    uint16_t getIRegister() { return m_IReg;}
+    uint8_t getDelayRegister() { return m_DelayReg;}
+    uint8_t getSoundRegister() { return m_SoundReg;}
+
+    // get stack
+    std::vector<uint16_t> getStack() { return m_Stack;}
+
+
+    bool executeNextInstruction();
+
+    bool loadRom(std::string filename, uint16_t addr = 0x200);
 };
 #endif // CLASS_CHIP8

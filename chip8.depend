@@ -11,20 +11,22 @@
 1516396835 source:c:\users\jjastad\documents\codeblocks\projects\chip8\chip8.cpp
 	"chip8.hpp"
 
-1516469677 source:c:\codeblocks\projects\chip8\chip8.cpp
+1516500788 source:c:\codeblocks\projects\chip8\chip8.cpp
 	"chip8.hpp"
 	<math.h>
 	<time.h>
+	<fstream>
 	"font.hpp"
 	<string>
 
-1516470185 c:\codeblocks\projects\chip8\chip8.hpp
+1516501673 c:\codeblocks\projects\chip8\chip8.hpp
 	<cstdlib>
 	<iostream>
 	<vector>
 
-1516470209 source:c:\codeblocks\projects\chip8\main.cpp
+1516502072 source:c:\codeblocks\projects\chip8\main.cpp
 	<cstdlib>
+	<sstream>
 	"chip8.hpp"
 	<SFML/Graphics.hpp>
 

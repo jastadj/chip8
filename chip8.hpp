@@ -18,6 +18,28 @@
 
 #define DISPLAY_SCALE 8
 
+struct Instruction
+{
+    // short description of instruction
+    std::string mnemonic;
+    // what the instruction affects (registers, etc)
+    std::string vars;
+    // original program counter
+    uint16_t opcode;
+    // first nibble is operation
+    uint8_t op;
+    // the rest of the 12-bits can be a value or address
+    uint16_t nnn;
+    // the last nibble
+    uint8_t n;
+    // second nibble
+    uint8_t x;
+    // third nibble
+    uint8_t y;
+    // last byte
+    uint8_t kk;
+};
+
 class Chip8
 {
 private:
@@ -70,6 +92,7 @@ private:
     bool m_isPaused;
     bool processInstruction(uint16_t inst);
     bool executeNextInstruction();
+    Instruction disassemble(uint16_t addr);
     void CPULoop();
 
     // SFML Rendering

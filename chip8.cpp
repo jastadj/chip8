@@ -83,6 +83,277 @@ void Chip8::shutdown()
     m_RunRender = false;
 }
 
+Instruction Chip8::disassemble(uint16_t addr)
+{
+    Instruction dinst;
+
+    std::stringstream varss;
+
+    // get opcode
+    dinst.opcode = m_Mem[addr] << 8;
+    dinst.opcode = dinst.opcode | m_Mem[addr+1];
+
+    // first nibble is op
+    dinst.op = (dinst.opcode & 0xf000) >> 12;
+    // the rest of the 12-bits can be a value or address
+    dinst.nnn = (dinst.opcode & 0x0fff);
+    // the last nibble
+    dinst.n = (dinst.opcode & 0x000f);
+    // second nibble
+    dinst.x = (dinst.opcode & 0x0f00) >> 8;
+    // third nibble
+    dinst.y = (dinst.opcode & 0x00f0) >> 4;
+    // last byte
+    dinst.kk = (dinst.opcode & 0x00ff);
+
+    if(dinst.op == 0x0)
+    {
+        // 00e0 - clear display
+        if(dinst.opcode == 0x00e0) dinst.mnemonic = "CLS";
+        // 00ee - return from subroutine, pop stack
+        else if(inst == 0x00ee) dinst.mnemonic = "RET";
+    }
+    // jump - set program counter to nnn
+    else if(dinst.op == 0x1)
+    {
+        dinst.mnemonic = "JP";
+        varss << "PC, " << std::hex << "0x" << dinst.nnn;
+        dinst.vars = varss.str();
+    }
+    // call address - call subroutine at nnn
+    // put current pcounter on top of stack, then set pcounter to nnn
+    else if(dinst.op == 0x2)
+    {
+        dinst.mnemonic = "CALL";
+        varss << "ST, PC, " << std::hex << "0x" << dinst.nnn;
+        dinst.vars = varss.str();
+    }
+    // skip if register x == kk, increment program counter by 2
+    else if(dinst.op == 0x3)
+    {
+        dinst.mnemonic = "SE";
+        varss << std::hex << "V" << dinst.x << ", " << "0x" << dinst.kk;
+        dinst.vars = varss.str();
+    }
+    // skip if register x != kk, increment program counter by 2
+    else if(dinst.op == 0x4)
+    {
+        dinst.mnemonic = "SNE";
+        varss << std::hex << "V" << dinst.x << ", " << "0x" << dinst.kk;
+        dinst.vars = varss.str();
+    }
+    // skip if register x is equal to register y
+    else if(dinst.op == 0x5)
+    {
+        dinst.mnemonic = "SE";
+        varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+        dinst.vars = varss.str();
+    }
+    // put value of kk into register x
+    else if(dinst.op == 0x6)
+    {
+        iname = "LD";
+
+        dinst.mnemonic = "LD";
+        varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
+        dinst.vars = varss.str();
+    }
+    // add kk to register x
+    else if(dinst.op == 0x7)
+    {
+        dinst.mnemonic = "ADD";
+        varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
+        dinst.vars = varss.str();
+    }
+    // register operations
+    else if(dinst.op == 0x8)
+    {
+        // EQUAL, stores reg y into reg x
+        if(n == 0x0)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+        }
+        // OR, reg x = reg x OR reg y
+        else if(n == 0x1)
+        {
+            dinst.mnemonic = "OR";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+        }
+        // AND, reg x = reg x AND reg y
+        else if(n == 0x2)
+        {
+            dinst.mnemonic = "AND";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+        }
+        // XOR, reg x = reg x XOR reg y
+        else if(n == 0x3)
+        {
+            dinst.mnemonic = "XOR";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+        }
+        // ADD, reg x = reg x + reg y
+        else if(n == 0x4)
+        {
+            dinst.mnemonic = "ADD";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+        }
+        // SUB, reg x = vx - vy
+        else if(n == 0x5)
+        {
+            dinst.mnemonic = "SUB";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+        }
+        // SHR (shift right), vx = vx / 2
+        else if(n == 0x6)
+        {
+            dinst.mnemonic = "SHR";
+            varss << std::hex << "V" << dinst.x << " {, V" << dinst.y << "}";
+            dinst.vars = varss.str();
+        }
+        // SUBN, reg x = reg y - reg x
+        else if(n == 0x7)
+        {
+            dinst.mnemonic = "SUBN";
+            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            dinst.vars = varss.str();
+
+        }
+        // SHL (shift left), reg x = reg x * 2
+        else if(n == 0xe)
+        {
+            dinst.mnemonic = "SHL";
+            varss << std::hex << "V" << dinst.x << " {, V" << dinst.y << "}";
+            dinst.vars = varss.str();
+        }
+    }
+    else if(dinst.op == 0x9)
+    {
+        dinst.mnemonic = "SNE";
+        varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+        dinst.vars = varss.str();
+    }
+    // set register I = nnn
+    else if(dinst.op == 0xa)
+    {
+        dinst.mnemonic = "LD";
+        varss << std::hex << "I, " <<  "0x" << dinst.nnn;
+        dinst.vars = varss.str();
+    }
+    // JUMP to location nnn + v0
+    else if(dinst.op == 0xb)
+    {
+        dinst.mnemonic = "JP";
+        varss << std::hex << "V0, 0x" << dinst.nnn;
+        dinst.vars = varss.str();
+
+    }
+    // RANDOM 0-255, then AND with kk and store in reg x
+    else if(dinst.op == 0xc)
+    {
+        dinst.mnemonic = "RND";
+        varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
+        dinst.vars = varss.str();
+
+    }
+    // DRAW n-byte height sprite starting at mem location reg I at regx,regy pixels
+    else if(dinst.op == 0xd)
+    {
+        dinst.mnemonic = "DRW";
+        varss << std::hex << "V" << dinst.x << " , V" << dinst.y << ", 0x" << dinst.n;
+        dinst.vars = varss.str();
+    }
+    else if(dinst.op == 0xe)
+    {
+        // skip next instruction if key value in reg x is pressed
+        if(kk == 0x9e)
+        {
+            dinst.mnemonic = "SKP";
+            varss << std::hex << "V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // skip next instruction if key value in reg x is not pressed
+        else if(kk == 0xa1)
+        {
+            dinst.mnemonic = "SKNP";
+            varss << std::hex << "V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+    }
+    else if(dinst.op == 0xf)
+    {
+        // reg x = value of delay timer
+        if(kk == 0x07)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "V" << dinst.x << " , DT";
+            dinst.vars = varss.str();
+        }
+        // wait for key press, then store key press in vx
+        else if(kk == 0x0a)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "V" << dinst.x << " , K";
+            dinst.vars = varss.str();
+        }
+        // set delay timer to value in reg x
+        else if(kk == 0x15)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "DT, V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // set sound timer to value of reg x
+        else if(kk == 0x18)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "ST, V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // values of reg I and reg x are added and stored in reg i
+        else if(kk == 0x1e)
+        {
+            dinst.mnemonic = "ADD";
+            varss << std::hex << "I, V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // font, set I to location of sprite associated with value in reg x
+        else if(kk == 0x29)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "F, V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // store BCD of vx in memory locations of I, I+1, and I+2
+        else if(kk == 0x33)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "B, V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // store register reg 0 through reg x in memory starting at location in reg i
+        else if(kk == 0x55)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "[I], V" << dinst.x;
+            dinst.vars = varss.str();
+        }
+        // read values from memory starting at location i into registers reg 0 through reg x
+        else if(kk == 0x65)
+        {
+            dinst.mnemonic = "LD";
+            varss << std::hex << "V" << dinst.x << ", [I]";
+            dinst.vars = varss.str();
+        }
+    }
+}
+
 bool Chip8::processInstruction(uint16_t inst)
 {
     m_Chip8Mutex.lock();

@@ -65,6 +65,7 @@ private:
 
     // processing
     int m_CPUTickDelayCounter;
+    double m_LastTickTime;
     bool processInstruction(uint16_t inst);
     bool executeNextInstruction();
     void CPULoop();

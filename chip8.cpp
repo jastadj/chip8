@@ -2,6 +2,7 @@
 #include <math.h>
 #include <time.h>
 #include <fstream>
+#include <sstream>
 
 #include "font.hpp"
 
@@ -16,6 +17,7 @@ Chip8::Chip8()
     m_Screen = NULL;
     m_RenderInitialized = false;
     m_CPUTickDelayCounter = 0;
+    m_LastTickTime = 0;
     m_RunCPU = false;
     m_RunRender = false;
 
@@ -532,6 +534,8 @@ void Chip8::CPULoop()
 
             }
 
+            m_LastTickTime = CPUClock.getElapsedTime().asMicroseconds();
+
             CPUClock.restart();
         }
     }
@@ -548,6 +552,8 @@ void Chip8::renderLoop()
     // create pixel used for "stamping"
     sf::RectangleShape spixel(sf::Vector2f(DISPLAY_SCALE, DISPLAY_SCALE));
 
+    // window title string stream
+    std::stringstream titless;
 
     while(m_RunRender)
     {
@@ -563,6 +569,13 @@ void Chip8::renderLoop()
                 if(event.key.code == sf::Keyboard::Escape) shutdown();
             }
         }
+
+        // update
+        // update title bar to show freq
+        titless.str(std::string(""));
+        titless << "Chip-8 " << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz";
+        m_Screen->setTitle(titless.str());
+
 
         // draw
         //m_Chip8Mutex.lock();

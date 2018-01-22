@@ -24,6 +24,8 @@ struct Instruction
     std::string mnemonic;
     // what the instruction affects (registers, etc)
     std::string vars;
+    // store address of instruction
+    uint16_t addr;
     // original program counter
     uint16_t opcode;
     // first nibble is operation
@@ -101,6 +103,8 @@ private:
     sf::RenderWindow *m_Screen;
     sf::Font m_Font;
     void renderLoop();
+
+    std::string getDisassembledString(Instruction *inst);
 
 public:
     Chip8();

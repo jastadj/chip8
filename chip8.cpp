@@ -83,11 +83,23 @@ void Chip8::shutdown()
     m_RunRender = false;
 }
 
+std::string Chip8::getDisassembledString(Instruction *inst)
+{
+    std::stringstream dss;
+
+    dss << std::hex << "0x" << inst->addr << " " << inst->opcode << " " << inst->mnemonic << " " << inst->vars;
+
+    return dss.str();
+}
+
 Instruction Chip8::disassemble(uint16_t addr)
 {
     Instruction dinst;
 
     std::stringstream varss;
+
+    // store address
+    dinst.addr = addr;
 
     // get opcode
     dinst.opcode = m_Mem[addr] << 8;

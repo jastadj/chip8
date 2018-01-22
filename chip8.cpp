@@ -20,6 +20,7 @@ Chip8::Chip8()
     m_LastTickTime = 0;
     m_RunCPU = false;
     m_RunRender = false;
+    m_isPaused = false;
 
     // init memory, registers, stack
     for(int i = 0; i < MAX_MEMORY; i++) m_Mem[i] = 0x0;
@@ -506,16 +507,18 @@ bool Chip8::initRender()
     return true;
 }
 
+
 void Chip8::CPULoop()
 {
-    sf::Clock CPUClock;
-
     m_RunCPU = true;
 
     while(m_RunCPU)
     {
+
+        if(m_isPaused) continue;
+
         // 1 cpu tick
-        if(CPUClock.getElapsedTime().asMicroseconds() >= 1851.8)
+        if(m_CPUClock.getElapsedTime().asMicroseconds() >= 1851.8)
         {
             // process current instruction at program counter
             executeNextInstruction();
@@ -534,9 +537,9 @@ void Chip8::CPULoop()
 
             }
 
-            m_LastTickTime = CPUClock.getElapsedTime().asMicroseconds();
+            m_LastTickTime = m_CPUClock.getElapsedTime().asMicroseconds();
 
-            CPUClock.restart();
+            m_CPUClock.restart();
         }
     }
 
@@ -567,6 +570,7 @@ void Chip8::renderLoop()
             else if(event.type == sf::Event::KeyPressed)
             {
                 if(event.key.code == sf::Keyboard::Escape) shutdown();
+                else if(event.key.code == sf::Keyboard::P) m_isPaused = !m_isPaused;
             }
         }
 
@@ -574,6 +578,7 @@ void Chip8::renderLoop()
         // update title bar to show freq
         titless.str(std::string(""));
         titless << "Chip-8 " << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz";
+        if(m_isPaused) titless << " - PAUSED";
         m_Screen->setTitle(titless.str());
 
 

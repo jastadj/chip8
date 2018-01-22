@@ -64,8 +64,10 @@ private:
 
 
     // processing
+    sf::Clock m_CPUClock;
     int m_CPUTickDelayCounter;
     double m_LastTickTime;
+    bool m_isPaused;
     bool processInstruction(uint16_t inst);
     bool executeNextInstruction();
     void CPULoop();
@@ -104,5 +106,7 @@ public:
     bool loadRom(std::string filename, uint16_t addr = 0x200);
     void start();
     void shutdown();
+    void pause(bool npause) {m_isPaused = npause;}
+    bool isPaused() { return m_isPaused;}
 };
 #endif // CLASS_CHIP8

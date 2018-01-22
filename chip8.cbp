@@ -36,6 +36,7 @@
 			<Add library="sfml-graphics" />
 			<Add library="sfml-window" />
 			<Add library="sfml-system" />
+			<Add library="pdcurses.a" />
 			<Add directory="../../SFML-2.4.2/lib" />
 		</Linker>
 		<Unit filename="chip8.cpp" />

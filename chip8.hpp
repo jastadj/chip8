@@ -5,6 +5,8 @@
 #include <iostream>
 #include <vector>
 
+#include <SFML/Graphics.hpp>
+
 #define MAX_MEMORY 4096
 #define MAX_REGISTERS 16
 #define MAX_STACK 16
@@ -13,6 +15,8 @@
 #define DISPLAY_HEIGHT 32
 
 #define FONT_ADDR 0x1af
+
+#define DISPLAY_SCALE 8
 
 class Chip8
 {
@@ -50,8 +54,27 @@ private:
     // keyboard, keypad only has 0-9, a-f keys
     uint8_t m_KeyState;
 
-    // instructions
+    // thread control
+    sf::Thread *m_CPUThread;
+    sf::Thread *m_RenderThread;
+    sf::Mutex m_Chip8Mutex;
+    sf::Mutex m_DelayMutex;
+    bool m_RunCPU;
+    bool m_RunRender;
+
+
+    // processing
+    int m_CPUTickDelayCounter;
     bool processInstruction(uint16_t inst);
+    bool executeNextInstruction();
+    void CPULoop();
+
+    // SFML Rendering
+    bool initRender();
+    bool m_RenderInitialized;
+    sf::RenderWindow *m_Screen;
+    sf::Font m_Font;
+    void renderLoop();
 
 public:
     Chip8();
@@ -77,9 +100,8 @@ public:
     // get stack
     std::vector<uint16_t> getStack() { return m_Stack;}
 
-
-    bool executeNextInstruction();
-
     bool loadRom(std::string filename, uint16_t addr = 0x200);
+    void start();
+    void shutdown();
 };
 #endif // CLASS_CHIP8

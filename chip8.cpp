@@ -13,6 +13,12 @@ Chip8::Chip8()
     // init random seed
     srand( time(NULL));
 
+    m_Screen = NULL;
+    m_RenderInitialized = false;
+    m_CPUTickDelayCounter = 0;
+    m_RunCPU = false;
+    m_RunRender = false;
+
     // init memory, registers, stack
     for(int i = 0; i < MAX_MEMORY; i++) m_Mem[i] = 0x0;
     for(int i = 0; i < MAX_REGISTERS; i++) m_Reg[i] = 0x0;
@@ -45,6 +51,9 @@ Chip8::Chip8()
         for(int n = 0; n < DISPLAY_WIDTH; n++) m_Display[i][n] = false;
     }
 
+    // create threads
+    m_CPUThread = new sf::Thread(&Chip8::CPULoop, this);
+    m_RenderThread = new sf::Thread(&Chip8::renderLoop, this);
 }
 
 Chip8::~Chip8()
@@ -52,8 +61,30 @@ Chip8::~Chip8()
 
 }
 
+void Chip8::start()
+{
+    m_CPUThread->launch();
+    m_RenderThread->launch();
+
+    std::cout << "Waiting on CPU thread...\n";
+    m_CPUThread->wait();
+    std::cout << "Waiting on render thread...\n";
+    m_RenderThread->wait();
+    std::cout << "Shutdown done.\n";
+}
+
+void Chip8::shutdown()
+{
+    std::cout << "Shutting down...\n";
+    m_RunCPU = false;
+    m_RunRender = false;
+}
+
 bool Chip8::processInstruction(uint16_t inst)
 {
+    m_Chip8Mutex.lock();
+    m_DelayMutex.lock();
+
 
     std::string iname = "ERR";
 
@@ -96,6 +127,7 @@ bool Chip8::processInstruction(uint16_t inst)
                 m_PCounter = m_Stack.back();
                 m_Stack.pop_back();
             }
+            else shutdown();
         }
     }
     // jump - set program counter to nnn
@@ -140,7 +172,7 @@ bool Chip8::processInstruction(uint16_t inst)
     {
         iname = "LD";
 
-        m_Reg[x] == kk;
+        m_Reg[x] = kk;
     }
     // add kk to register x
     else if(opcode == 0x7)
@@ -402,7 +434,7 @@ bool Chip8::processInstruction(uint16_t inst)
 
 
 
-    if(true)
+    if(false)
     {
         std::cout << std::hex << "processing instruction:" << int(inst) << std::endl;
         std::cout << "opcode: " << int(opcode) << std::endl;
@@ -411,11 +443,13 @@ bool Chip8::processInstruction(uint16_t inst)
         std::cout << "x     : " << int(x) << std::endl;
         std::cout << "y     : " << int(y) << std::endl;
         std::cout << "kk    : " << int(kk) << std::endl;
+        std::cout << std::hex << m_PCounter << " : " << iname << std::endl;
     }
-    std::cout << std::hex << m_PCounter << " : " << iname << std::endl;
 
 
 
+    m_Chip8Mutex.unlock();
+    m_DelayMutex.unlock();
 
     return true;
 }
@@ -432,12 +466,14 @@ bool Chip8::executeNextInstruction()
 
 bool Chip8::loadRom(std::string filename, uint16_t addr)
 {
+
     std::ifstream ifile;
 
     ifile.open(filename.c_str(), std::ios::binary);
 
     if(!ifile.is_open()) return false;
 
+    m_Chip8Mutex.lock();
     while(!ifile.eof())
     {
         unsigned char b;
@@ -447,4 +483,107 @@ bool Chip8::loadRom(std::string filename, uint16_t addr)
         m_Mem[addr] = uint8_t(b);
         addr++;
     }
+    m_Chip8Mutex.unlock();
+
+    ifile.close();
+
+    return true;
 }
+
+bool Chip8::initRender()
+{
+    if(m_RenderInitialized) return false;
+
+    // create render window
+    m_Screen = new sf::RenderWindow(sf::VideoMode(DISPLAY_WIDTH * DISPLAY_SCALE, DISPLAY_HEIGHT * DISPLAY_SCALE, 32), "Chip-8");
+
+    m_Font.loadFromFile("font.ttf");
+
+    m_RenderInitialized = true;
+
+    return true;
+}
+
+void Chip8::CPULoop()
+{
+    sf::Clock CPUClock;
+
+    m_RunCPU = true;
+
+    while(m_RunCPU)
+    {
+        // 1 cpu tick
+        if(CPUClock.getElapsedTime().asMicroseconds() >= 1851.8)
+        {
+            // process current instruction at program counter
+            executeNextInstruction();
+
+            // tick for delay counter
+            m_CPUTickDelayCounter++;
+            // delay counter 60Hz (540Hz / 60Hz = 9)
+            if(m_CPUTickDelayCounter >= 9)
+            {
+                m_CPUTickDelayCounter = 0;
+
+                m_DelayMutex.lock();
+                if(m_DelayReg > 0) m_DelayReg--;
+                if(m_SoundReg > 0) m_SoundReg--;
+                m_DelayMutex.unlock();
+
+            }
+
+            CPUClock.restart();
+        }
+    }
+
+    std::cout << "CPU thread exiting...\n";
+
+}
+
+void Chip8::renderLoop()
+{
+    initRender();
+    m_RunRender = true;
+
+    // create pixel used for "stamping"
+    sf::RectangleShape spixel(sf::Vector2f(DISPLAY_SCALE, DISPLAY_SCALE));
+
+
+    while(m_RunRender)
+    {
+        m_Screen->clear();
+
+        sf::Event event;
+
+        while(m_Screen->pollEvent(event))
+        {
+            if(event.type == sf::Event::Closed) shutdown();
+            else if(event.type == sf::Event::KeyPressed)
+            {
+                if(event.key.code == sf::Keyboard::Escape) shutdown();
+            }
+        }
+
+        // draw
+        //m_Chip8Mutex.lock();
+        for(int i = 0; i < DISPLAY_HEIGHT; i++)
+        {
+            for(int n = 0; n < DISPLAY_WIDTH; n++)
+            {
+                if(m_Display[i][n])
+                {
+                    spixel.setPosition(sf::Vector2f( n*DISPLAY_SCALE, i*DISPLAY_SCALE));
+                    m_Screen->draw(spixel);
+                }
+            }
+        }
+        //m_Chip8Mutex.unlock();
+
+        // update screen
+        m_Screen->display();
+    }
+
+    std::cout << "Render thread exiting...\n";
+}
+
+

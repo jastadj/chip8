@@ -111,7 +111,7 @@ Instruction Chip8::disassemble(uint16_t addr)
         // 00e0 - clear display
         if(dinst.opcode == 0x00e0) dinst.mnemonic = "CLS";
         // 00ee - return from subroutine, pop stack
-        else if(inst == 0x00ee) dinst.mnemonic = "RET";
+        else if(dinst.opcode == 0x00ee) dinst.mnemonic = "RET";
     }
     // jump - set program counter to nnn
     else if(dinst.op == 0x1)
@@ -152,8 +152,6 @@ Instruction Chip8::disassemble(uint16_t addr)
     // put value of kk into register x
     else if(dinst.op == 0x6)
     {
-        iname = "LD";
-
         dinst.mnemonic = "LD";
         varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
         dinst.vars = varss.str();
@@ -169,56 +167,56 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0x8)
     {
         // EQUAL, stores reg y into reg x
-        if(n == 0x0)
+        if(dinst.n == 0x0)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
             dinst.vars = varss.str();
         }
         // OR, reg x = reg x OR reg y
-        else if(n == 0x1)
+        else if(dinst.n == 0x1)
         {
             dinst.mnemonic = "OR";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
             dinst.vars = varss.str();
         }
         // AND, reg x = reg x AND reg y
-        else if(n == 0x2)
+        else if(dinst.n == 0x2)
         {
             dinst.mnemonic = "AND";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
             dinst.vars = varss.str();
         }
         // XOR, reg x = reg x XOR reg y
-        else if(n == 0x3)
+        else if(dinst.n == 0x3)
         {
             dinst.mnemonic = "XOR";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
             dinst.vars = varss.str();
         }
         // ADD, reg x = reg x + reg y
-        else if(n == 0x4)
+        else if(dinst.n == 0x4)
         {
             dinst.mnemonic = "ADD";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
             dinst.vars = varss.str();
         }
         // SUB, reg x = vx - vy
-        else if(n == 0x5)
+        else if(dinst.n == 0x5)
         {
             dinst.mnemonic = "SUB";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
             dinst.vars = varss.str();
         }
         // SHR (shift right), vx = vx / 2
-        else if(n == 0x6)
+        else if(dinst.n == 0x6)
         {
             dinst.mnemonic = "SHR";
             varss << std::hex << "V" << dinst.x << " {, V" << dinst.y << "}";
             dinst.vars = varss.str();
         }
         // SUBN, reg x = reg y - reg x
-        else if(n == 0x7)
+        else if(dinst.n == 0x7)
         {
             dinst.mnemonic = "SUBN";
             varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
@@ -226,7 +224,7 @@ Instruction Chip8::disassemble(uint16_t addr)
 
         }
         // SHL (shift left), reg x = reg x * 2
-        else if(n == 0xe)
+        else if(dinst.n == 0xe)
         {
             dinst.mnemonic = "SHL";
             varss << std::hex << "V" << dinst.x << " {, V" << dinst.y << "}";
@@ -272,14 +270,14 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0xe)
     {
         // skip next instruction if key value in reg x is pressed
-        if(kk == 0x9e)
+        if(dinst.kk == 0x9e)
         {
             dinst.mnemonic = "SKP";
             varss << std::hex << "V" << dinst.x;
             dinst.vars = varss.str();
         }
         // skip next instruction if key value in reg x is not pressed
-        else if(kk == 0xa1)
+        else if(dinst.kk == 0xa1)
         {
             dinst.mnemonic = "SKNP";
             varss << std::hex << "V" << dinst.x;
@@ -289,209 +287,164 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0xf)
     {
         // reg x = value of delay timer
-        if(kk == 0x07)
+        if(dinst.kk == 0x07)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "V" << dinst.x << " , DT";
             dinst.vars = varss.str();
         }
         // wait for key press, then store key press in vx
-        else if(kk == 0x0a)
+        else if(dinst.kk == 0x0a)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "V" << dinst.x << " , K";
             dinst.vars = varss.str();
         }
         // set delay timer to value in reg x
-        else if(kk == 0x15)
+        else if(dinst.kk == 0x15)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "DT, V" << dinst.x;
             dinst.vars = varss.str();
         }
         // set sound timer to value of reg x
-        else if(kk == 0x18)
+        else if(dinst.kk == 0x18)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "ST, V" << dinst.x;
             dinst.vars = varss.str();
         }
         // values of reg I and reg x are added and stored in reg i
-        else if(kk == 0x1e)
+        else if(dinst.kk == 0x1e)
         {
             dinst.mnemonic = "ADD";
             varss << std::hex << "I, V" << dinst.x;
             dinst.vars = varss.str();
         }
         // font, set I to location of sprite associated with value in reg x
-        else if(kk == 0x29)
+        else if(dinst.kk == 0x29)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "F, V" << dinst.x;
             dinst.vars = varss.str();
         }
         // store BCD of vx in memory locations of I, I+1, and I+2
-        else if(kk == 0x33)
+        else if(dinst.kk == 0x33)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "B, V" << dinst.x;
             dinst.vars = varss.str();
         }
         // store register reg 0 through reg x in memory starting at location in reg i
-        else if(kk == 0x55)
+        else if(dinst.kk == 0x55)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "[I], V" << dinst.x;
             dinst.vars = varss.str();
         }
         // read values from memory starting at location i into registers reg 0 through reg x
-        else if(kk == 0x65)
+        else if(dinst.kk == 0x65)
         {
             dinst.mnemonic = "LD";
             varss << std::hex << "V" << dinst.x << ", [I]";
             dinst.vars = varss.str();
         }
     }
+
+    return dinst;
 }
 
-bool Chip8::processInstruction(uint16_t inst)
+bool Chip8::processInstruction(Instruction inst)
 {
     m_Chip8Mutex.lock();
     m_DelayMutex.lock();
 
-
-    std::string iname = "ERR";
-
-    // original program counter
-    uint16_t op = m_PCounter;
-
-    // first nibble is op code
-    uint8_t opcode = (inst & 0xf000) >> 12;
-    // the rest of the 12-bits can be a value or address
-    uint16_t nnn = (inst & 0x0fff);
-    // the last nibble
-    uint8_t n = (inst & 0x000f);
-    // second nibble
-    uint8_t x = (inst & 0x0f00) >> 8;
-    // third nibble
-    uint8_t y = (inst & 0x00f0) >> 4;
-    // last byte
-    uint8_t kk = (inst & 0x00ff);
-
     // advance program counter
-    if(m_PCounter == op) m_PCounter += 2;
+    m_PCounter += 2;
 
-    if(opcode == 0x0)
+    if(inst.op == 0x0)
     {
         // 00e0 - clear display
-        if(inst == 0x00e0)
+        if(inst.opcode == 0x00e0)
         {
-            iname = "CLS";
-
             for(int iy = 0; iy < DISPLAY_HEIGHT; iy++)
                 for(int nx = 0; nx < DISPLAY_WIDTH; nx++) m_Display[iy][nx] = false;
         }
         // 00ee - return from subroutine, pop stack
-        else if(inst == 0x00ee)
+        else if(inst.opcode == 0x00ee)
         {
             if(!m_Stack.empty())
             {
-                iname = "RET";
-
                 m_PCounter = m_Stack.back();
                 m_Stack.pop_back();
             }
-            else shutdown();
+            else m_isPaused = true;
         }
     }
     // jump - set program counter to nnn
-    else if(opcode == 0x1)
+    else if(inst.op == 0x1)
     {
-        iname = "JP";
-
-        m_PCounter = nnn;
+        m_PCounter = inst.nnn;
     }
     // call address - call subroutine at nnn
     // put current pcounter on top of stack, then set pcounter to nnn
-    else if(opcode == 0x2)
+    else if(inst.op == 0x2)
     {
-        iname = "CALL";
-
         m_Stack.push_back(m_PCounter);
-        m_PCounter = nnn;
+        m_PCounter = inst.nnn;
     }
     // skip if register x == kk, increment program counter by 2
-    else if(opcode == 0x3)
+    else if(inst.op == 0x3)
     {
-        iname = "SE";
-
-        if(m_Reg[x] == kk) m_PCounter += 2;
+        if(m_Reg[inst.x] == inst.kk) m_PCounter += 2;
     }
     // skip if register x != kk, increment program counter by 2
-    else if(opcode == 0x4)
+    else if(inst.op == 0x4)
     {
-        iname = "SNE";
-
-        if(m_Reg[x] != kk) m_PCounter += 2;
+        if(m_Reg[inst.x] != inst.kk) m_PCounter += 2;
     }
     // skip if register x is equal to register y
-    else if(opcode == 0x5)
+    else if(inst.op == 0x5)
     {
-        iname = "SEV";
-
-        if(m_Reg[x] == m_Reg[y]) m_PCounter += 2;
+        if(m_Reg[inst.x] == m_Reg[inst.y]) m_PCounter += 2;
     }
     // put value of kk into register x
-    else if(opcode == 0x6)
+    else if(inst.op == 0x6)
     {
-        iname = "LD";
-
-        m_Reg[x] = kk;
+        m_Reg[inst.x] = inst.kk;
     }
     // add kk to register x
-    else if(opcode == 0x7)
+    else if(inst.op == 0x7)
     {
-        iname = "ADD";
-
-        m_Reg[x] = m_Reg[x] + kk;
+        m_Reg[inst.x] = m_Reg[inst.x] + inst.kk;
     }
     // register operations
-    else if(opcode == 0x8)
+    else if(inst.op == 0x8)
     {
         // EQUAL, stores reg y into reg x
-        if(n == 0x0)
+        if(inst.n == 0x0)
         {
-            iname = "LDV";
-
-            m_Reg[x] = m_Reg[y];
+            m_Reg[inst.x] = m_Reg[inst.y];
         }
         // OR, reg x = reg x OR reg y
-        else if(n == 0x1)
+        else if(inst.n == 0x1)
         {
-            iname = "OR";
-
-            m_Reg[x] = m_Reg[x] | m_Reg[y];
+            m_Reg[inst.x] = m_Reg[inst.x] | m_Reg[inst.y];
         }
         // AND, reg x = reg x AND reg y
-        else if(n == 0x2)
+        else if(inst.n == 0x2)
         {
-            iname = "AND";
-
-            m_Reg[x] = m_Reg[x] & m_Reg[y];
+            m_Reg[inst.x] = m_Reg[inst.x] & m_Reg[inst.y];
         }
         // XOR, reg x = reg x XOR reg y
-        else if(n == 0x3)
+        else if(inst.n == 0x3)
         {
-            iname = "XOR";
-
-            m_Reg[x] = m_Reg[x] ^ m_Reg[y];
+            m_Reg[inst.x] = m_Reg[inst.x] ^ m_Reg[inst.y];
         }
         // ADD, reg x = reg x + reg y
-        else if(n == 0x4)
+        else if(inst.n == 0x4)
         {
-            unsigned int result = m_Reg[x] + m_Reg[y];
-
-            iname = "ADDV";
+            unsigned int result = m_Reg[inst.x] + m_Reg[inst.y];
 
             // if result overflows register
             if(result > 0xff)
@@ -503,99 +456,82 @@ bool Chip8::processInstruction(uint16_t inst)
             }
             else m_Reg[0xf] = 0x0;
 
-            m_Reg[x] = result;
+            m_Reg[inst.x] = result;
         }
         // SUB, reg x = vx - vy
-        else if(n == 0x5)
+        else if(inst.n == 0x5)
         {
-            iname = "SUB";
-
             // set not borrow flag if reg x > reg y
-            if(m_Reg[x] > m_Reg[y]) m_Reg[0xf] = 0x1;
+            if(m_Reg[inst.x] > m_Reg[inst.y]) m_Reg[0xf] = 0x1;
             else m_Reg[0xf] = 0x0;
 
-            m_Reg[x] = m_Reg[x] - m_Reg[y];
+            m_Reg[inst.x] = m_Reg[inst.x] - m_Reg[inst.y];
         }
         // SHR (shift right), vx = vx / 2
-        else if(n == 0x6)
+        else if(inst.n == 0x6)
         {
-            iname = "SHR";
-
             // if odd number
-            if(m_Reg[x] & 0x1) m_Reg[0xf] = 0x1;
+            if(m_Reg[inst.x] & 0x1) m_Reg[0xf] = 0x1;
             else m_Reg[0xf] = 0x0;
 
-            m_Reg[x] = m_Reg[x] >> 1;
+            m_Reg[inst.x] = m_Reg[inst.x] >> 1;
         }
         // SUBN, reg x = reg y - reg x
-        else if(n == 0x7)
+        else if(inst.n == 0x7)
         {
-            iname = "SUB";
-
             // set not borrow flag if reg y > reg x
-            if(m_Reg[y] > m_Reg[x]) m_Reg[0xf] = 0x1;
+            if(m_Reg[inst.y] > m_Reg[inst.x]) m_Reg[0xf] = 0x1;
             else m_Reg[0xf] = 0x0;
 
-            m_Reg[x] = m_Reg[y] - m_Reg[x];
+            m_Reg[inst.x] = m_Reg[inst.y] - m_Reg[inst.x];
         }
         // SHL (shift left), reg x = reg x * 2
-        else if(n == 0xe)
+        else if(inst.n == 0xe)
         {
-            iname = "SHL";
-
-            if(0x80 & m_Reg[x]) m_Reg[0xf] = 0x1;
+            if(0x80 & m_Reg[inst.x]) m_Reg[0xf] = 0x1;
             else m_Reg[0xf] = 0x0;
 
-            m_Reg[x] = m_Reg[x] << 1;
+            m_Reg[inst.x] = m_Reg[inst.x] << 1;
         }
     }
-    else if(opcode == 0x9)
+    else if(inst.op == 0x9)
     {
-        iname = "SNE";
-
         // skip next instruction if reg x != reg y
-        if(n == 0x0)
+        if(inst.n == 0x0)
         {
-            if(m_Reg[x] != m_Reg[y]) m_PCounter += 2;
+            if(m_Reg[inst.x] != m_Reg[inst.y]) m_PCounter += 2;
         }
     }
     // set register I = nnn
-    else if(opcode == 0xa)
+    else if(inst.op == 0xa)
     {
-        iname = "LD";
-
-        m_IReg = nnn;
+        m_IReg = inst.nnn;
     }
     // JUMP to location nnn + v0
-    else if(opcode == 0xb)
+    else if(inst.op == 0xb)
     {
-        iname = "JP";
-
-        m_PCounter = nnn + m_Reg[0x0];
+        m_PCounter = inst.nnn + m_Reg[0x0];
     }
     // RANDOM 0-255, then AND with kk and store in reg x
-    else if(opcode == 0xc)
+    else if(inst.op == 0xc)
     {
-        iname = "RND";
-        m_Reg[x] = (rand()%256)&kk;
+        m_Reg[inst.x] = (rand()%256)&inst.kk;
     }
     // DRAW n-byte height sprite starting at mem location reg I at regx,regy pixels
-    else if(opcode == 0xd)
+    else if(inst.op == 0xd)
     {
         // check bounds of register x and register y
-        if(m_Reg[x] >= 0 && m_Reg[y] >= 0 && m_Reg[x] < DISPLAY_WIDTH && m_Reg[y] < DISPLAY_HEIGHT)
+        if(m_Reg[inst.x] >= 0 && m_Reg[inst.y] >= 0 && m_Reg[inst.x] < DISPLAY_WIDTH && m_Reg[inst.y] < DISPLAY_HEIGHT)
         {
-            iname = "DRW";
-
             // for each sprite row
-            for(int ny = 0; ny < n; ny++)
+            for(int ny = 0; ny < inst.n; ny++)
             {
                 // for each pixel in row
                 for(int nx = 0; nx < 8; nx++)
                 {
                     // current pixel
-                    int px = nx + m_Reg[x];
-                    int py = ny + m_Reg[y];
+                    int px = nx + m_Reg[inst.x];
+                    int py = ny + m_Reg[inst.y];
 
                     // check sprite bit for pixel on or off
                     bool pon = (m_Mem[m_IReg + ny] >> (7-nx)) & 0x1;
@@ -612,115 +548,78 @@ bool Chip8::processInstruction(uint16_t inst)
             }
         }
     }
-    else if(opcode == 0xe)
+    else if(inst.op == 0xe)
     {
         // skip next instruction if key value in reg x is pressed
-        if(kk == 0x9e)
+        if(inst.kk == 0x9e)
         {
-            iname = "SKP";
-
-            if(m_KeyState == m_Reg[x]) m_PCounter += 2;
+            if(m_KeyState == m_Reg[inst.x]) m_PCounter += 2;
         }
         // skip next instruction if key value in reg x is not pressed
-        else if(kk == 0xa1)
+        else if(inst.kk == 0xa1)
         {
-            iname = "SKP";
-
-            if(m_KeyState != m_Reg[x]) m_PCounter += 2;
+            if(m_KeyState != m_Reg[inst.x]) m_PCounter += 2;
         }
     }
-    else if(opcode == 0xf)
+    else if(inst.op == 0xf)
     {
         // reg x = value of delay timer
-        if(kk == 0x07)
+        if(inst.kk == 0x07)
         {
-            iname = "LD";
-
-            m_Reg[x] = m_DelayReg;
+            m_Reg[inst.x] = m_DelayReg;
         }
         // wait for key press, then store key press in vx
-        else if(kk == 0x0a)
+        else if(inst.kk == 0x0a)
         {
-            iname = "LD";
-
             // need to figure out key input loop first
         }
         // set delay timer to value in reg x
-        else if(kk == 0x15)
+        else if(inst.kk == 0x15)
         {
-            iname = "LD";
-
-            m_DelayReg = m_Reg[x];
+            m_DelayReg = m_Reg[inst.x];
         }
         // set sound timer to value of reg x
-        else if(kk == 0x18)
+        else if(inst.kk == 0x18)
         {
-            iname = "LD";
-
-            m_SoundReg = m_Reg[x];
+            m_SoundReg = m_Reg[inst.x];
         }
         // values of reg I and reg x are added and stored in reg i
-        else if(kk == 0x1e)
+        else if(inst.kk == 0x1e)
         {
-            iname = "ADD";
-
-            m_IReg += m_IReg + m_Reg[x];
+            m_IReg += m_IReg + m_Reg[inst.x];
         }
         // font, set I to location of sprite associated with value in reg x
-        else if(kk == 0x29)
+        else if(inst.kk == 0x29)
         {
-            if(m_Reg[x] <= 0xf)
+            if(m_Reg[inst.x] <= 0xf)
             {
-                iname = "LD";
-                m_IReg = FONT_ADDR + (m_Reg[x]*5);
+                m_IReg = FONT_ADDR + (m_Reg[inst.x]*5);
             }
 
         }
         // store BCD of vx in memory locations of I, I+1, and I+2
-        else if(kk == 0x33)
+        else if(inst.kk == 0x33)
         {
-            iname = "LD";
-
             // ??
         }
         // store register reg 0 through reg x in memory starting at location in reg i
-        else if(kk == 0x55)
+        else if(inst.kk == 0x55)
         {
-            if(m_Reg[x] < MAX_REGISTERS)
+            if(m_Reg[inst.x] < MAX_REGISTERS)
             {
-                iname = "LD";
-
-                for(int j = 0; j <= m_Reg[x]; j++)  m_Mem[m_IReg + j] = m_Reg[j];
+                for(int j = 0; j <= m_Reg[inst.x]; j++)  m_Mem[m_IReg + j] = m_Reg[j];
             }
 
         }
         // read values from memory starting at location i into registers reg 0 through reg x
-        else if(kk == 0x65)
+        else if(inst.kk == 0x65)
         {
-            if(m_Reg[x] < MAX_REGISTERS)
+            if(m_Reg[inst.x] < MAX_REGISTERS)
             {
-                iname = "LD";
-
-                for(int j = 0; j <= m_Reg[x]; j++)  m_Reg[j] = m_Mem[m_IReg + j];
+                for(int j = 0; j <= m_Reg[inst.x]; j++)  m_Reg[j] = m_Mem[m_IReg + j];
             }
         }
     }
-
-
-
-    if(false)
-    {
-        std::cout << std::hex << "processing instruction:" << int(inst) << std::endl;
-        std::cout << "opcode: " << int(opcode) << std::endl;
-        std::cout << "nnn   : " << int(nnn) << std::endl;
-        std::cout << "n     : " << int(n) << std::endl;
-        std::cout << "x     : " << int(x) << std::endl;
-        std::cout << "y     : " << int(y) << std::endl;
-        std::cout << "kk    : " << int(kk) << std::endl;
-        std::cout << std::hex << m_PCounter << " : " << iname << std::endl;
-    }
-
-
 
     m_Chip8Mutex.unlock();
     m_DelayMutex.unlock();
@@ -730,7 +629,7 @@ bool Chip8::processInstruction(uint16_t inst)
 
 bool Chip8::executeNextInstruction()
 {
-    if(processInstruction( (m_Mem[m_PCounter] << 8) | (m_Mem[m_PCounter+1])     ) )
+    if(processInstruction( disassemble(m_PCounter) ) )
     {
         return true;
     }

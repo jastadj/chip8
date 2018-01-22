@@ -90,7 +90,7 @@ private:
     int m_CPUTickDelayCounter;
     double m_LastTickTime;
     bool m_isPaused;
-    bool processInstruction(uint16_t inst);
+    bool processInstruction(Instruction inst);
     bool executeNextInstruction();
     Instruction disassemble(uint16_t addr);
     void CPULoop();

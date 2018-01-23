@@ -98,6 +98,9 @@ void Chip8::reset()
         for(int n = 0; n < DISPLAY_WIDTH; n++) m_Display[i][n] = false;
     }
 
+    // pop stack
+    while(!m_Stack.empty()) m_Stack.pop_back();
+
     m_DelayMutex.unlock();
     m_Chip8Mutex.unlock();
 

@@ -21,6 +21,7 @@ Chip8::Chip8()
     m_RunRender = false;
     m_isPaused = false;
     m_doStep = false;
+    m_doRender = true;
 
     // init memory, registers, stack
     for(int i = 0; i < MAX_MEMORY; i++) m_Mem[i] = 0x0;
@@ -107,12 +108,16 @@ void Chip8::reset()
 void Chip8::start()
 {
     m_CPUThread->launch();
-    m_RenderThread->launch();
+    if(m_doRender) m_RenderThread->launch();
 
     std::cout << "Waiting on CPU thread...\n";
     m_CPUThread->wait();
-    std::cout << "Waiting on render thread...\n";
-    m_RenderThread->wait();
+    if(m_doRender)
+    {
+        std::cout << "Waiting on render thread...\n";
+        m_RenderThread->wait();
+    }
+
     std::cout << "Shutdown done.\n";
 }
 

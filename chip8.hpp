@@ -118,6 +118,7 @@ private:
     void CPULoop();
 
     // SFML Rendering
+    bool m_doRender;
     bool initRender();
     bool m_RenderInitialized;
     sf::RenderWindow *m_Screen;
@@ -152,6 +153,7 @@ public:
     std::vector<uint16_t> getStack() { return m_Stack;}
 
     bool loadRom(std::string filename, uint16_t addr = 0x200);
+    bool disableRender() {if(m_RenderInitialized) return false;  else m_doRender = false; return true;}
     void start();
     void reset();
     void pause(bool npause) {m_isPaused = npause;}

@@ -411,6 +411,14 @@ bool Chip8::processInstruction(Instruction inst)
     // advance program counter
     m_PCounter += 2;
 
+    // if program counter reached the end of memory, decrement back and pause
+    if(m_PCounter >= MAX_MEMORY)
+    {
+        m_PCounter -=2;
+        m_isPaused = true;
+        return false;
+    }
+
     if(inst.op == 0x0)
     {
         // 00e0 - clear display

@@ -871,7 +871,8 @@ void Chip8::renderLoop()
 
 void Chip8::drawDebug()
 {
-    const sf::Color bgcol(0,0,128,230);
+    const sf::Color bgcol(0,0,128,240);
+    const sf::Color bg2col(20,20,20,100);
     const int fontsize = 14;
     static sf::IntRect drect(64,0,m_Screen->getSize().x-128, m_Screen->getSize().y);
 
@@ -880,6 +881,12 @@ void Chip8::drawDebug()
     bg.move(sf::Vector2f(drect.left,drect.top));
     bg.setFillColor(bgcol);
     m_Screen->draw(bg);
+
+    // background2 pane
+    sf::RectangleShape bg2(sf::Vector2f(270, 130));
+    bg2.move( sf::Vector2f(drect.left+4, drect.top + 46));
+    bg2.setFillColor(bg2col);
+    m_Screen->draw(bg2);
 
     // top line
     std::stringstream topliness;
@@ -897,10 +904,23 @@ void Chip8::drawDebug()
     sliness << std::hex << "DC: 0x" << std::setfill('0') << std::setw(2) << int(m_DelayReg) << " ";
     sliness << "SC: 0x" << std::setfill('0') << std::setw(2) << int(m_SoundReg) << " ";
     sliness << "K: " << int(m_KeyState) << " ";
-    sliness << "STACK_SIZE: " << std::dec << m_Stack.size() << std::hex;
+    //sliness << "STACK_SIZE: " << std::dec << m_Stack.size() << std::hex;
     sf::Text slinetxt(sliness.str(), m_Font, fontsize);
     slinetxt.setPosition(drect.left + 8, drect.top + 16);
     m_Screen->draw(slinetxt);
+
+    // stack
+    std::stringstream stackss;
+    stackss << "STACK: " << std::dec << std::setfill('0') << std::setw(2) << m_Stack.size() << std::hex << std::endl;
+    stackss << "---------\n";
+    for(int i = 0; i < int(m_Stack.size()); i++)
+    {
+        stackss << "0x" << std::hex << std::setfill('0') << std::setw(4) << int(m_Stack[i]) << std::endl;
+    }
+    sf::Text stacktxt(stackss.str(), m_Font, fontsize);
+    stacktxt.setPosition(drect.left + drect.width - 80, 0);
+    m_Screen->draw(stacktxt);
+
 
     // opcodes
     for(int i = 0; i < 8; i++)

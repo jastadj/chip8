@@ -605,6 +605,8 @@ bool Chip8::processInstruction(Instruction inst)
 
                     // XOR pixel state with display
                     if(pon != m_Display[py][px]) m_Display[py][px] = true;
+                    else m_Display[py][px] = false;
+
 
                 }
             }

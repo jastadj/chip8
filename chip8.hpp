@@ -116,7 +116,6 @@ private:
     bool executeNextInstruction();
     Instruction disassemble(uint16_t addr);
     void CPULoop();
-    void reset();
 
     // SFML Rendering
     bool initRender();
@@ -154,8 +153,10 @@ public:
 
     bool loadRom(std::string filename, uint16_t addr = 0x200);
     void start();
-    void shutdown();
+    void reset();
     void pause(bool npause) {m_isPaused = npause;}
     bool isPaused() { return m_isPaused;}
+    bool step() { if(m_isPaused) m_doStep = true;  return m_doStep;}
+    void shutdown();
 };
 #endif // CLASS_CHIP8

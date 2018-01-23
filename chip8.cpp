@@ -832,10 +832,7 @@ void Chip8::renderLoop()
                 // pause processing
                 else if(event.key.code == sf::Keyboard::P) m_isPaused = !m_isPaused;
                 // step next instruction if paused
-                else if(event.key.code == sf::Keyboard::S)
-                {
-                    if(m_isPaused) m_doStep = true;
-                }
+                else if(event.key.code == sf::Keyboard::S) step();
                 // reset machine
                 else if(event.key.code == sf::Keyboard::R) reset();
                 // toggle debug window

@@ -40,7 +40,6 @@
 		</Linker>
 		<Unit filename="chip8.cpp" />
 		<Unit filename="chip8.hpp" />
-		<Unit filename="font.hpp" />
 		<Unit filename="main.cpp" />
 		<Extensions>
 			<code_completion />

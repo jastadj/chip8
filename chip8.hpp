@@ -96,6 +96,7 @@ private:
     bool executeNextInstruction();
     Instruction disassemble(uint16_t addr);
     void CPULoop();
+    void reset();
 
     // SFML Rendering
     bool initRender();

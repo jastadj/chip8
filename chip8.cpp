@@ -34,11 +34,14 @@ Chip8::Chip8()
     // init key state
     m_KeyState = 0x0;
 
-    // set first instruction to jump to address 0x200
-    m_Mem[0x0] = 0x12;
-    m_Mem[0x1] = 0x00;
-    m_Mem[0x200] = 0x10;
-    m_Mem[0x201] = 0x00;
+    // initial instructions
+    // clear screen
+    m_Mem[0x00] = 0x00;
+    m_Mem[0x01] = 0xe0;
+    // jump to address 0x0200
+    m_Mem[0x02] = 0x12;
+    m_Mem[0x03] = 0x00;
+
 
     // store fonts (80 bytes = 16 characters * 5 bytes) in memory
     // store at mem 0x01af to allow for 80 bytes, stopping before 0x0200
@@ -61,6 +64,40 @@ Chip8::Chip8()
 
 Chip8::~Chip8()
 {
+
+}
+
+void Chip8::reset()
+{
+    m_Chip8Mutex.lock();
+    m_DelayMutex.lock();
+
+    // init random seed
+    srand( time(NULL));
+
+    // reset vars
+    m_CPUTickDelayCounter = 0;
+    m_LastTickTime = 0;
+
+    m_IReg = 0x0;
+    m_DelayReg = 0x0;
+    m_SoundReg = 0x0;
+    m_PCounter = 0x0;
+
+    // clear registers
+    for(int i = 0; i < MAX_REGISTERS; i++) m_Reg[i] = 0x0;
+
+    // init key state
+    m_KeyState = 0x0;
+
+    // clear display
+    for(int i = 0; i < DISPLAY_HEIGHT; i++)
+    {
+        for(int n = 0; n < DISPLAY_WIDTH; n++) m_Display[i][n] = false;
+    }
+
+    m_DelayMutex.unlock();
+    m_Chip8Mutex.unlock();
 
 }
 
@@ -752,7 +789,10 @@ void Chip8::renderLoop()
             else if(event.type == sf::Event::KeyPressed)
             {
                 if(event.key.code == sf::Keyboard::Escape) shutdown();
+                // pause processing
                 else if(event.key.code == sf::Keyboard::P) m_isPaused = !m_isPaused;
+                // reset machine
+                else if(event.key.code == sf::Keyboard::R) reset();
             }
         }
 

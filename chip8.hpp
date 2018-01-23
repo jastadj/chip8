@@ -92,6 +92,7 @@ private:
     int m_CPUTickDelayCounter;
     double m_LastTickTime;
     bool m_isPaused;
+    bool m_doStep;
     bool processInstruction(Instruction inst);
     bool executeNextInstruction();
     Instruction disassemble(uint16_t addr);

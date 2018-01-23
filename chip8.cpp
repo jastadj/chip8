@@ -22,6 +22,7 @@ Chip8::Chip8()
     m_RunCPU = false;
     m_RunRender = false;
     m_isPaused = false;
+    m_doStep = false;
 
     // init memory, registers, stack
     for(int i = 0; i < MAX_MEMORY; i++) m_Mem[i] = 0x0;
@@ -746,7 +747,32 @@ void Chip8::CPULoop()
     while(m_RunCPU)
     {
 
-        if(m_isPaused) continue;
+        if(m_isPaused)
+        {
+            if(m_doStep)
+            {
+                // process current instruction at program counter
+                executeNextInstruction();
+
+                // tick for delay counter
+                m_CPUTickDelayCounter++;
+                // delay counter 60Hz (540Hz / 60Hz = 9)
+                if(m_CPUTickDelayCounter >= 9)
+                {
+                    m_CPUTickDelayCounter = 0;
+
+                    m_DelayMutex.lock();
+                    if(m_DelayReg > 0) m_DelayReg--;
+                    if(m_SoundReg > 0) m_SoundReg--;
+                    m_DelayMutex.unlock();
+
+                }
+                m_doStep = false;
+            }
+
+            continue;
+        }
+        else m_doStep = false;
 
         // 1 cpu tick
         if(m_CPUClock.getElapsedTime().asMicroseconds() >= 1851.8)
@@ -802,6 +828,11 @@ void Chip8::renderLoop()
                 if(event.key.code == sf::Keyboard::Escape) shutdown();
                 // pause processing
                 else if(event.key.code == sf::Keyboard::P) m_isPaused = !m_isPaused;
+                // step next instruction if paused
+                else if(event.key.code == sf::Keyboard::S)
+                {
+                    if(m_isPaused) m_doStep = true;
+                }
                 // reset machine
                 else if(event.key.code == sf::Keyboard::R) reset();
                 // toggle debug window
@@ -851,7 +882,7 @@ void Chip8::drawDebug()
     // top line
     std::stringstream topliness;
     topliness << std::hex << "PC: 0x" << std::setfill('0') << std::setw(4) << int(m_PCounter) << " ";
-    topliness << "RI: 0x" << std::setfill('0') << std::setw(4) << int(m_IReg) << " ";
+    topliness << "VI: 0x" << std::setfill('0') << std::setw(4) << int(m_IReg) << " ";
     topliness << std::dec << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz" << std::hex;
     sf::Text toplinetxt(topliness.str(), m_Font, fontsize);
     toplinetxt.setPosition(drect.left + 8, drect.top);
@@ -861,7 +892,8 @@ void Chip8::drawDebug()
     std::stringstream sliness;
     sliness << std::hex << "DC: 0x" << std::setfill('0') << std::setw(2) << int(m_DelayReg) << " ";
     sliness << "SC: 0x" << std::setfill('0') << std::setw(2) << int(m_SoundReg) << " ";
-    sliness << "K: " << int(m_KeyState);
+    sliness << "K: " << int(m_KeyState) << " ";
+    sliness << "STACK_SIZE: " << std::dec << m_Stack.size() << std::hex;
     sf::Text slinetxt(sliness.str(), m_Font, fontsize);
     slinetxt.setPosition(drect.left + 8, drect.top + 16);
     m_Screen->draw(slinetxt);
@@ -875,6 +907,7 @@ void Chip8::drawDebug()
 
         sf::Text octxt(getDisassembledString(&ti), m_Font, fontsize);
         octxt.setPosition(drect.left + 8, drect.top + 50 + i*15);
+        if(i == 0) octxt.setFillColor(sf::Color(255,255,0));
         m_Screen->draw(octxt);
     }
 
@@ -882,7 +915,7 @@ void Chip8::drawDebug()
     std::stringstream regss;
     for(int i = 0; i < MAX_REGISTERS; i++)
     {
-        regss << "R" << std::hex << i << ":" << std::setfill('0') << std::setw(2) << int(m_Reg[i]) << " ";
+        regss << "V" << std::hex << i << ":" << std::setfill('0') << std::setw(2) << int(m_Reg[i]) << " ";
         if(i == 7) regss << "\n";
     }
     sf::Text regtxt(regss.str(), m_Font, fontsize);

@@ -885,7 +885,9 @@ void Chip8::drawDebug()
     std::stringstream topliness;
     topliness << std::hex << "PC: 0x" << std::setfill('0') << std::setw(4) << int(m_PCounter) << " ";
     topliness << "VI: 0x" << std::setfill('0') << std::setw(4) << int(m_IReg) << " ";
-    topliness << std::dec << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz" << std::hex;
+    if(!m_isPaused) topliness << std::dec << int(pow( (m_LastTickTime / 1000000), -1));
+    else topliness << "---";
+    topliness << "Hz" << std::hex;
     sf::Text toplinetxt(topliness.str(), m_Font, fontsize);
     toplinetxt.setPosition(drect.left + 8, drect.top);
     m_Screen->draw(toplinetxt);

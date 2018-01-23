@@ -104,6 +104,7 @@ private:
     sf::RenderWindow *m_Screen;
     sf::Font m_Font;
     void renderLoop();
+    void drawDebug();
 
     std::string getDisassembledString(Instruction *inst);
 

@@ -3,6 +3,7 @@
 #include <time.h>
 #include <fstream>
 #include <sstream>
+#include <iomanip>
 
 #include "font.hpp"
 
@@ -124,7 +125,9 @@ std::string Chip8::getDisassembledString(Instruction *inst)
 {
     std::stringstream dss;
 
-    dss << std::hex << "0x" << inst->addr << " " << inst->opcode << " " << inst->mnemonic << " " << inst->vars;
+    dss << std::hex << "0x" << std::setfill('0') << std::setw(4) << int(inst->addr) << " ";
+    dss << std::setfill('0') << std::setw(2) << int(inst->opcode) << " ";
+    dss << std::setfill(' ') << std::setw(4) << inst->mnemonic << " " << inst->vars;
 
     return dss.str();
 }
@@ -166,7 +169,7 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0x1)
     {
         dinst.mnemonic = "JP";
-        varss << "PC, " << std::hex << "0x" << dinst.nnn;
+        varss << "PC, " << std::hex << "0x" << std::setfill('0') << std::setw(4) << int(dinst.nnn);
         dinst.vars = varss.str();
     }
     // call address - call subroutine at nnn
@@ -174,42 +177,43 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0x2)
     {
         dinst.mnemonic = "CALL";
-        varss << "ST, PC, " << std::hex << "0x" << dinst.nnn;
+        varss << "ST, PC, " << "0x" << std::hex << std::setfill('0') << std::setw(4) << int(dinst.nnn);
         dinst.vars = varss.str();
     }
     // skip if register x == kk, increment program counter by 2
     else if(dinst.op == 0x3)
     {
         dinst.mnemonic = "SE";
-        varss << std::hex << "V" << dinst.x << ", " << "0x" << dinst.kk;
+        varss << std::hex << "V" << int(dinst.x) << ", " << "0x";
+        varss << std::setfill('0') << std::setw(2) << int(dinst.kk);
         dinst.vars = varss.str();
     }
     // skip if register x != kk, increment program counter by 2
     else if(dinst.op == 0x4)
     {
         dinst.mnemonic = "SNE";
-        varss << std::hex << "V" << dinst.x << ", " << "0x" << dinst.kk;
+        varss << std::hex << "V" << int(dinst.x) << ", " << "0x" << std::setfill('0') << std::setw(2) << int(dinst.kk);
         dinst.vars = varss.str();
     }
     // skip if register x is equal to register y
     else if(dinst.op == 0x5)
     {
         dinst.mnemonic = "SE";
-        varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+        varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
         dinst.vars = varss.str();
     }
     // put value of kk into register x
     else if(dinst.op == 0x6)
     {
         dinst.mnemonic = "LD";
-        varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
+        varss << std::hex << "V" << int(dinst.x) << " , 0x" << std::setfill('0') << std::setw(2) << int(dinst.kk);
         dinst.vars = varss.str();
     }
     // add kk to register x
     else if(dinst.op == 0x7)
     {
         dinst.mnemonic = "ADD";
-        varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
+        varss << std::hex << "V" << int(dinst.x) << " , 0x" << std::setfill('0') << std::setw(2) << int(dinst.kk);
         dinst.vars = varss.str();
     }
     // register operations
@@ -219,56 +223,56 @@ Instruction Chip8::disassemble(uint16_t addr)
         if(dinst.n == 0x0)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
         }
         // OR, reg x = reg x OR reg y
         else if(dinst.n == 0x1)
         {
             dinst.mnemonic = "OR";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
         }
         // AND, reg x = reg x AND reg y
         else if(dinst.n == 0x2)
         {
             dinst.mnemonic = "AND";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
         }
         // XOR, reg x = reg x XOR reg y
         else if(dinst.n == 0x3)
         {
             dinst.mnemonic = "XOR";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
         }
         // ADD, reg x = reg x + reg y
         else if(dinst.n == 0x4)
         {
             dinst.mnemonic = "ADD";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
         }
         // SUB, reg x = vx - vy
         else if(dinst.n == 0x5)
         {
             dinst.mnemonic = "SUB";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
         }
         // SHR (shift right), vx = vx / 2
         else if(dinst.n == 0x6)
         {
             dinst.mnemonic = "SHR";
-            varss << std::hex << "V" << dinst.x << " {, V" << dinst.y << "}";
+            varss << std::hex << "V" << int(dinst.x) << " {, V" << int(dinst.y) << "}";
             dinst.vars = varss.str();
         }
         // SUBN, reg x = reg y - reg x
         else if(dinst.n == 0x7)
         {
             dinst.mnemonic = "SUBN";
-            varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+            varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
             dinst.vars = varss.str();
 
         }
@@ -276,28 +280,28 @@ Instruction Chip8::disassemble(uint16_t addr)
         else if(dinst.n == 0xe)
         {
             dinst.mnemonic = "SHL";
-            varss << std::hex << "V" << dinst.x << " {, V" << dinst.y << "}";
+            varss << std::hex << "V" << int(dinst.x) << " {, V" << int(dinst.y) << "}";
             dinst.vars = varss.str();
         }
     }
     else if(dinst.op == 0x9)
     {
         dinst.mnemonic = "SNE";
-        varss << std::hex << "V" << dinst.x << " , V" << dinst.y;
+        varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y);
         dinst.vars = varss.str();
     }
     // set register I = nnn
     else if(dinst.op == 0xa)
     {
         dinst.mnemonic = "LD";
-        varss << std::hex << "I, " <<  "0x" << dinst.nnn;
+        varss << std::hex << "I, " <<  "0x" << std::setfill('0') << std::setw(4) << int(dinst.nnn);
         dinst.vars = varss.str();
     }
     // JUMP to location nnn + v0
     else if(dinst.op == 0xb)
     {
         dinst.mnemonic = "JP";
-        varss << std::hex << "V0, 0x" << dinst.nnn;
+        varss << std::hex << "V0, 0x" << std::setfill('0') << std::setw(4) << int(dinst.nnn);
         dinst.vars = varss.str();
 
     }
@@ -305,7 +309,7 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0xc)
     {
         dinst.mnemonic = "RND";
-        varss << std::hex << "V" << dinst.x << " , 0x" << dinst.kk;
+        varss << std::hex << "V" << int(dinst.x) << " , 0x" << std::setfill('0') << std::setw(2) << int(dinst.kk);
         dinst.vars = varss.str();
 
     }
@@ -313,7 +317,7 @@ Instruction Chip8::disassemble(uint16_t addr)
     else if(dinst.op == 0xd)
     {
         dinst.mnemonic = "DRW";
-        varss << std::hex << "V" << dinst.x << " , V" << dinst.y << ", 0x" << dinst.n;
+        varss << std::hex << "V" << int(dinst.x) << " , V" << int(dinst.y) << ", 0x" << int(dinst.n);
         dinst.vars = varss.str();
     }
     else if(dinst.op == 0xe)
@@ -322,14 +326,14 @@ Instruction Chip8::disassemble(uint16_t addr)
         if(dinst.kk == 0x9e)
         {
             dinst.mnemonic = "SKP";
-            varss << std::hex << "V" << dinst.x;
+            varss << std::hex << "V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // skip next instruction if key value in reg x is not pressed
         else if(dinst.kk == 0xa1)
         {
             dinst.mnemonic = "SKNP";
-            varss << std::hex << "V" << dinst.x;
+            varss << std::hex << "V" << int(dinst.x);
             dinst.vars = varss.str();
         }
     }
@@ -339,63 +343,63 @@ Instruction Chip8::disassemble(uint16_t addr)
         if(dinst.kk == 0x07)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "V" << dinst.x << " , DT";
+            varss << std::hex << "V" << int(dinst.x) << " , DT";
             dinst.vars = varss.str();
         }
         // wait for key press, then store key press in vx
         else if(dinst.kk == 0x0a)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "V" << dinst.x << " , K";
+            varss << std::hex << "V" << int(dinst.x) << " , K";
             dinst.vars = varss.str();
         }
         // set delay timer to value in reg x
         else if(dinst.kk == 0x15)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "DT, V" << dinst.x;
+            varss << std::hex << "DT, V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // set sound timer to value of reg x
         else if(dinst.kk == 0x18)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "ST, V" << dinst.x;
+            varss << std::hex << "ST, V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // values of reg I and reg x are added and stored in reg i
         else if(dinst.kk == 0x1e)
         {
             dinst.mnemonic = "ADD";
-            varss << std::hex << "I, V" << dinst.x;
+            varss << std::hex << "I, V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // font, set I to location of sprite associated with value in reg x
         else if(dinst.kk == 0x29)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "F, V" << dinst.x;
+            varss << std::hex << "F, V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // store BCD of vx in memory locations of I, I+1, and I+2
         else if(dinst.kk == 0x33)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "B, V" << dinst.x;
+            varss << std::hex << "B, V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // store register reg 0 through reg x in memory starting at location in reg i
         else if(dinst.kk == 0x55)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "[I], V" << dinst.x;
+            varss << std::hex << "[I], V" << int(dinst.x);
             dinst.vars = varss.str();
         }
         // read values from memory starting at location i into registers reg 0 through reg x
         else if(dinst.kk == 0x65)
         {
             dinst.mnemonic = "LD";
-            varss << std::hex << "V" << dinst.x << ", [I]";
+            varss << std::hex << "V" << int(dinst.x) << ", [I]";
             dinst.vars = varss.str();
         }
     }
@@ -776,14 +780,13 @@ void Chip8::CPULoop()
 
 void Chip8::renderLoop()
 {
+    bool doDrawDbg = false;
+
     initRender();
     m_RunRender = true;
 
     // create pixel used for "stamping"
     sf::RectangleShape spixel(sf::Vector2f(DISPLAY_SCALE, DISPLAY_SCALE));
-
-    // window title string stream
-    std::stringstream titless;
 
     while(m_RunRender)
     {
@@ -801,16 +804,12 @@ void Chip8::renderLoop()
                 else if(event.key.code == sf::Keyboard::P) m_isPaused = !m_isPaused;
                 // reset machine
                 else if(event.key.code == sf::Keyboard::R) reset();
+                // toggle debug window
+                else if(event.key.code == sf::Keyboard::F1) doDrawDbg = !doDrawDbg;
             }
         }
 
         // update
-        // update title bar to show freq
-        titless.str(std::string(""));
-        titless << "Chip-8 " << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz";
-        if(m_isPaused) titless << " - PAUSED";
-        m_Screen->setTitle(titless.str());
-
 
         // draw
         //m_Chip8Mutex.lock();
@@ -827,6 +826,9 @@ void Chip8::renderLoop()
         }
         //m_Chip8Mutex.unlock();
 
+        // if drawing debug window
+        if(doDrawDbg) drawDebug();
+
         // update screen
         m_Screen->display();
     }
@@ -834,4 +836,70 @@ void Chip8::renderLoop()
     std::cout << "Render thread exiting...\n";
 }
 
+void Chip8::drawDebug()
+{
+    const sf::Color bgcol(0,0,128,230);
+    const int fontsize = 14;
+    static sf::IntRect drect(64,0,m_Screen->getSize().x-128, m_Screen->getSize().y);
 
+    // background pane
+    sf::RectangleShape bg(sf::Vector2f(drect.width, drect.height));
+    bg.move(sf::Vector2f(drect.left,drect.top));
+    bg.setFillColor(bgcol);
+    m_Screen->draw(bg);
+
+    // top line
+    std::stringstream topliness;
+    topliness << std::hex << "PC: 0x" << std::setfill('0') << std::setw(4) << int(m_PCounter) << " ";
+    topliness << "RI: 0x" << std::setfill('0') << std::setw(4) << int(m_IReg) << " ";
+    topliness << std::dec << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz" << std::hex;
+    sf::Text toplinetxt(topliness.str(), m_Font, fontsize);
+    toplinetxt.setPosition(drect.left + 8, drect.top);
+    m_Screen->draw(toplinetxt);
+
+    // second line
+    std::stringstream sliness;
+    sliness << std::hex << "DC: 0x" << std::setfill('0') << std::setw(2) << int(m_DelayReg) << " ";
+    sliness << "SC: 0x" << std::setfill('0') << std::setw(2) << int(m_SoundReg) << " ";
+    sliness << "K: " << int(m_KeyState);
+    sf::Text slinetxt(sliness.str(), m_Font, fontsize);
+    slinetxt.setPosition(drect.left + 8, drect.top + 16);
+    m_Screen->draw(slinetxt);
+
+    // opcodes
+    for(int i = 0; i < 8; i++)
+    {
+        if(m_PCounter + i*2 >= MAX_MEMORY) continue;
+
+        Instruction ti = disassemble(m_PCounter + i*2);
+
+        sf::Text octxt(getDisassembledString(&ti), m_Font, fontsize);
+        octxt.setPosition(drect.left + 8, drect.top + 50 + i*15);
+        m_Screen->draw(octxt);
+    }
+
+    // registers
+    std::stringstream regss;
+    for(int i = 0; i < MAX_REGISTERS; i++)
+    {
+        regss << "R" << std::hex << i << ":" << std::setfill('0') << std::setw(2) << int(m_Reg[i]) << " ";
+        if(i == 7) regss << "\n";
+    }
+    sf::Text regtxt(regss.str(), m_Font, fontsize);
+    //regtxt.setFillColor(textcol);
+    regtxt.setPosition(drect.left + 4, drect.top + drect.height - 30);
+    m_Screen->draw(regtxt);
+
+    /*
+
+            // update title bar to show freq
+        titless.str(std::string(""));
+        titless << "Chip-8 " << int(pow( (m_LastTickTime / 1000000), -1)) << "Hz";
+        if(m_isPaused) titless << " - PAUSED";
+        m_Screen->setTitle(titless.str());
+
+        */
+
+
+
+}

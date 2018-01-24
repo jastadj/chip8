@@ -95,7 +95,7 @@ private:
     bool m_Display[DISPLAY_HEIGHT][DISPLAY_WIDTH];
 
     // keyboard, keypad only has 0-9, a-f keys
-    uint8_t m_KeyState;
+    uint16_t m_KeyState;
 
     // thread control
     sf::Thread *m_CPUThread;
@@ -153,9 +153,11 @@ public:
     // get stack
     std::vector<uint16_t> getStack() { return m_Stack;}
 
+    // interface
     bool loadRom(std::string filename, uint16_t addr = 0x200);
     bool disableRender() {if(m_RenderInitialized) return false;  else m_doRender = false; return true;}
     void start();
+    void setKeyState(uint8_t keypressed) { m_KeyState = keypressed;}
     void reset();
     void pause(bool npause) {m_isPaused = npause;}
     bool isPaused() { return m_isPaused;}

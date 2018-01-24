@@ -627,12 +627,12 @@ bool Chip8::processInstruction(Instruction inst)
         // skip next instruction if key value in reg x is pressed
         if(inst.kk == 0x9e)
         {
-            if(m_KeyState == m_Reg[inst.x]) m_PCounter += 2;
+            if( m_KeyState >> m_Reg[inst.x] & 0x01 ) m_PCounter += 2;
         }
         // skip next instruction if key value in reg x is not pressed
         else if(inst.kk == 0xa1)
         {
-            if(m_KeyState != m_Reg[inst.x]) m_PCounter += 2;
+            if( !(m_KeyState >> m_Reg[inst.x] & 0x01) ) m_PCounter += 2;
         }
     }
     else if(inst.op == 0xf)
@@ -645,7 +645,10 @@ bool Chip8::processInstruction(Instruction inst)
         // wait for key press, then store key press in vx
         else if(inst.kk == 0x0a)
         {
-            // need to figure out key input loop first
+            // if no keys are pressed, do not advance program counter
+            if(m_KeyState == 0x00) m_PCounter -= 2;
+            // else store keystate in vx
+            m_Reg[inst.x] = m_KeyState;
         }
         // set delay timer to value in reg x
         else if(inst.kk == 0x15)
@@ -827,6 +830,12 @@ void Chip8::renderLoop()
 {
     bool doDrawDbg = false;
 
+    static const sf::Keyboard::Key keys[] = { sf::Keyboard::Num0,sf::Keyboard::Num1,sf::Keyboard::Num2,sf::Keyboard::Num3,
+                                sf::Keyboard::Num4,sf::Keyboard::Num5,sf::Keyboard::Num6, sf::Keyboard::Num7,
+                                sf::Keyboard::Num8,sf::Keyboard::Num9,sf::Keyboard::A, sf::Keyboard::B,
+                                sf::Keyboard::C,sf::Keyboard::D,sf::Keyboard::E,sf::Keyboard::F
+                              };
+
     initRender();
     m_RunRender = true;
 
@@ -839,20 +848,37 @@ void Chip8::renderLoop()
 
         sf::Event event;
 
+        // check if chip-8 key is pressed
+        m_KeyState = 0x0;
+        for(int i = 0; i < 16; i++)
+            m_KeyState |= sf::Keyboard::isKeyPressed(keys[i]) << i;
+
         while(m_Screen->pollEvent(event))
         {
             if(event.type == sf::Event::Closed) shutdown();
             else if(event.type == sf::Event::KeyPressed)
             {
-                if(event.key.code == sf::Keyboard::Escape) shutdown();
-                // pause processing
-                else if(event.key.code == sf::Keyboard::P) m_isPaused = !m_isPaused;
-                // step next instruction if paused
-                else if(event.key.code == sf::Keyboard::S) step();
-                // reset machine
-                else if(event.key.code == sf::Keyboard::R) reset();
-                // toggle debug window
-                else if(event.key.code == sf::Keyboard::F1) doDrawDbg = !doDrawDbg;
+                switch(event.key.code)
+                {
+                case sf::Keyboard::Escape:
+                    shutdown();
+                    break;
+                case sf::Keyboard::P:
+                    m_isPaused = !m_isPaused;
+                    break;
+                case sf::Keyboard::S:
+                    step();
+                    break;
+                case sf::Keyboard::R:
+                    reset();
+                    break;
+                case sf::Keyboard::F1:
+                    doDrawDbg = !doDrawDbg;
+                    break;
+                default:
+                    break;
+                }
+
             }
         }
 

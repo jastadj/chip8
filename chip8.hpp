@@ -114,8 +114,11 @@ private:
     bool m_doStep;
     bool processInstruction(Instruction inst);
     bool executeNextInstruction();
-    Instruction disassemble(uint16_t addr);
     void CPULoop();
+
+    // decoding
+    Instruction disassemble(uint16_t addr);
+    std::string getDisassembledString(Instruction *inst);
 
     // SFML Rendering
     bool m_doRender;
@@ -125,8 +128,6 @@ private:
     sf::Font m_Font;
     void renderLoop();
     void drawDebug();
-
-    std::string getDisassembledString(Instruction *inst);
 
 public:
     Chip8();

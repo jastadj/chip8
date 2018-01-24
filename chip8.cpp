@@ -674,7 +674,14 @@ bool Chip8::processInstruction(Instruction inst)
         // store BCD of vx in memory locations of I, I+1, and I+2
         else if(inst.kk == 0x33)
         {
-            // ??
+            // binary coded decimal
+            uint8_t val = m_Reg[inst.x];
+            // ones
+            m_Mem[m_IReg] = val%10;
+            // tens
+            m_Mem[m_IReg+1] = (val/10)%10;
+            // hundreds
+            m_Mem[m_IReg+2] = (val/10/10)%10;
         }
         // store register reg 0 through reg x in memory starting at location in reg i
         else if(inst.kk == 0x55)

@@ -132,6 +132,8 @@ std::string Chip8::getDisassembledString(Instruction *inst)
 {
     std::stringstream dss;
 
+    if(inst->mnemonic.empty()) inst->mnemonic = "UNK";
+
     // memory address
     dss << std::hex << std::setfill('0') << std::setw(4) << int(inst->addr) << " ";
     // opcode
@@ -1009,4 +1011,106 @@ void Chip8::drawDebug()
 
 
 
+}
+
+bool Chip8::disassembleRomToASM(std::string romfile, std::string asmfile, bool verbose)
+{
+    std::ifstream ifile;
+    std::ofstream ofile;
+
+    uint16_t offset = 0x200;
+    std::vector<Instruction> instructions;
+    std::vector<uint16_t> labels;
+
+    // attemp to open files for reading and writing
+    ifile.open(romfile.c_str(), std::ios::binary);
+    if(!ifile.is_open())
+    {
+        std::cout << "Error opening rom file:" << romfile << std::endl;
+        return false;
+    }
+
+    ofile.open(asmfile.c_str());
+    if(!ofile.is_open())
+    {
+        std::cout << "Erorr opening file for writing:" << asmfile << std::endl;
+        ifile.close();
+        return false;
+    }
+
+    while(!ifile.eof())
+    {
+        char bytes[2];
+        uint16_t opcode;
+        Instruction inst;
+
+        ifile.get(bytes[0]);
+        ifile.get(bytes[1]);
+
+        opcode = (unsigned char)(bytes[0]) << 8 | (unsigned char)(bytes[1]);
+
+        // add disassembled opcode instruction to list
+        inst = disassemble(opcode);
+        instructions.push_back( inst );
+
+        if(verbose)
+        {
+            ofile << std::right << std::hex << std::setw(4) << std::setfill('0') << offset;
+            ofile << std::hex << "  " << std::setw(4) << std::setfill('0') << opcode << "  ";
+            ofile << std::hex << std::left << std::setfill(' ') << std::setw(10) << inst.mnemonic << inst.vars << std::endl;
+        }
+
+        offset += 2;
+    }
+
+    if(!verbose)
+    {
+        // pass through all instructions and find labels (from calls and jumps) in instructions
+        for(int i = 0; i < int(instructions.size()); i++)
+        {
+            // if instruction is specifying an address, add to labels list
+            if(instructions[i].mnemonic == "CALL" || instructions[i].mnemonic == "JUMP")
+            {
+                bool alreadyexists = false;
+
+                // make sure there is not already a label at this address
+                for(int n = 0; n < int(labels.size()); n++)
+                {
+                    if(labels[n] == instructions[i].nnn) alreadyexists = true;
+                }
+
+                if(!alreadyexists)
+                {
+                    std::stringstream labelss;
+
+                    labels.push_back( instructions[i].nnn);
+
+                    labelss << "label_" << std::dec << labels.size();
+                    instructions[i].vars = labelss.str();
+                }
+
+            }
+        }
+
+        // pass through instructions again and identify label locations
+        for(int i = 0; i < int(instructions.size()); i++)
+        {
+            for(int n = 0; n < int(labels.size()); n++)
+            {
+                if(labels[n] == i*2 + 0x200)
+                {
+                    ofile << std::endl << "label_" << std::dec << n+1 << ":\n";
+                }
+            }
+
+            // write assembly string
+            ofile << "    " << std::hex << std::left << std::setfill(' ') << std::setw(10) << instructions[i].mnemonic << instructions[i].vars << std::endl;
+        }
+
+    }
+
+    ofile.close();
+    ifile.close();
+
+    std::cout << "Disassembled " << romfile << " to " << asmfile << ".\n";
 }

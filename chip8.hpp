@@ -156,6 +156,7 @@ public:
 
     // interface
     bool loadRom(std::string filename, uint16_t addr = 0x200);
+    bool disassembleRomToASM(std::string romfile, std::string asmfile, bool verbose = false);
     bool disableRender() {if(m_RenderInitialized) return false;  else m_doRender = false; return true;}
     void start();
     void setKeyState(uint8_t keypressed) { m_KeyState = keypressed;}

@@ -144,18 +144,28 @@ std::string Chip8::getDisassembledString(Instruction *inst)
     return dss.str();
 }
 
-Instruction Chip8::disassemble(uint16_t addr)
+Instruction Chip8::disassembleAtAddr(uint16_t addr)
+{
+    // get opcode from memory address
+    uint16_t opcode = m_Mem[addr] << 8 | m_Mem[addr+1];
+
+    // disassemble opcode
+    Instruction inst = disassemble(opcode);
+
+    // store address
+    inst.addr = addr;
+
+    return inst;
+}
+
+Instruction Chip8::disassemble(uint16_t opcode)
 {
     Instruction dinst;
 
     std::stringstream varss;
 
-    // store address
-    dinst.addr = addr;
-
-    // get opcode
-    dinst.opcode = m_Mem[addr] << 8;
-    dinst.opcode = dinst.opcode | m_Mem[addr+1];
+    // set opcode
+    dinst.opcode = opcode;
 
     // first nibble is op
     dinst.op = (dinst.opcode & 0xf000) >> 12;
@@ -713,7 +723,7 @@ bool Chip8::processInstruction(Instruction inst)
 
 bool Chip8::executeNextInstruction()
 {
-    if(processInstruction( disassemble(m_PCounter) ) )
+    if( processInstruction( disassembleAtAddr(m_PCounter) ) )
     {
         return true;
     }
@@ -967,7 +977,7 @@ void Chip8::drawDebug()
     {
         if(m_PCounter + i*2 >= MAX_MEMORY) continue;
 
-        Instruction ti = disassemble(m_PCounter + i*2);
+        Instruction ti = disassembleAtAddr(m_PCounter + i*2);
 
         sf::Text octxt(getDisassembledString(&ti), m_Font, fontsize);
         octxt.setPosition(drect.left + 8, drect.top + 50 + i*15);

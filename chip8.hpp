@@ -117,7 +117,8 @@ private:
     void CPULoop();
 
     // decoding
-    Instruction disassemble(uint16_t addr);
+    Instruction disassemble(uint16_t opcode);
+    Instruction disassembleAtAddr(uint16_t addr);
     std::string getDisassembledString(Instruction *inst);
 
     // SFML Rendering

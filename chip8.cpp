@@ -137,7 +137,7 @@ std::string Chip8::getDisassembledString(Instruction *inst)
     // memory address
     dss << std::hex << std::setfill('0') << std::setw(4) << int(inst->addr) << " ";
     // opcode
-    dss << std::setfill('0') << std::setw(2) << int(inst->opcode) << " ";
+    dss << std::setfill('0') << std::setw(4) << int(inst->opcode) << " ";
     // mnemonic
     dss << std::left << std::setfill(' ') << std::setw(7) << inst->mnemonic << " ";
     // vars
